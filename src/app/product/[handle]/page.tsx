@@ -5,8 +5,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getProductByHandle, getProducts } from '@/lib/shopify';
-import { ProductGallery } from '@/components/shop/ProductGallery';
-import { ProductInfo } from '@/components/shop/ProductInfo';
+import { ProductView } from '@/components/shop/ProductView';
 import { ProductCard } from '@/components/shop/ProductCard';
 
 interface ProductPageProps {
@@ -53,13 +52,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-          {/* Gallery */}
-          <ProductGallery product={product} />
-
-          {/* Product info + actions */}
-          <ProductInfo product={product} />
-        </div>
+        <ProductView product={product} />
       </div>
 
       {/* Related products */}

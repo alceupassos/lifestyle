@@ -8,7 +8,13 @@ import { TryOnModal } from '@/components/tryon/TryOnModal';
 import { cn } from '@/lib/utils';
 import type { ShopifyProduct, ShopifyProductVariant } from '@/types';
 
-export function ProductInfo({ product }: { product: ShopifyProduct }) {
+export function ProductInfo({ 
+  product, 
+  customGarmentImageUrl 
+}: { 
+  product: ShopifyProduct;
+  customGarmentImageUrl?: string;
+}) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() =>
     Object.fromEntries(product.options.map((o) => [o.name, o.values[0]]))
   );
@@ -35,7 +41,7 @@ export function ProductInfo({ product }: { product: ShopifyProduct }) {
 
   const isAvailable = selectedVariant?.availableForSale ?? false;
 
-  const garmentImageUrl = product.featuredImage?.url || product.images.nodes[0]?.url || '';
+  const garmentImageUrl = customGarmentImageUrl || product.featuredImage?.url || product.images.nodes[0]?.url || '';
 
   const handleAddToCart = async () => {
     if (!selectedVariant || !isAvailable) return;

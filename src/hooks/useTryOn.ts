@@ -21,6 +21,7 @@ interface UseTryOnReturn {
   progress: string;
   startTryOn: (modelFile: File) => Promise<void>;
   reset: () => void;
+  setModelPreviewUrl: (url: string | null) => void;
 }
 
 const PROGRESS_MESSAGES: Record<string, string> = {
@@ -108,7 +109,6 @@ export function useTryOn({ garmentImageUrl }: UseTryOnOptions): UseTryOnReturn {
   const reset = useCallback(() => {
     setStatus('idle');
     setResultImageUrl(null);
-    setModelPreviewUrl(null);
     setError(null);
     setProgress('');
   }, []);
@@ -121,5 +121,6 @@ export function useTryOn({ garmentImageUrl }: UseTryOnOptions): UseTryOnReturn {
     progress,
     startTryOn,
     reset,
+    setModelPreviewUrl,
   };
 }

@@ -6,12 +6,30 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ShopifyProduct } from '@/types';
 
-export function ProductGallery({ product }: { product: ShopifyProduct }) {
+export function ProductGallery({ 
+  product, 
+  externalActiveIndex, 
+  onIndexChange 
+}: { 
+  product: ShopifyProduct;
+  externalActiveIndex?: number;
+  onIndexChange?: (index: number) => void;
+}) {
   const images = product.images.nodes.length > 0
     ? product.images.nodes
     : product.featuredImage ? [product.featuredImage] : [];
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [internalActiveIndex, setInternalActiveIndex] = useState(0);
+  
+  const activeIndex = externalActiveIndex !== undefined ? externalActiveIndex : internalActiveIndex;
+  const setActiveIndex = (updater: number | ((i: number) => number)) => {
+    const newIndex = typeof updater === 'function' ? updater(activeIndex) : updater;
+    if (onIndexChange) {
+      onIndexChange(newIndex);
+    } else {
+      setInternalActiveIndex(newIndex);
+    }
+  };
   const activeImage = images[activeIndex];
 
   const prev = () => setActiveIndex((i) => (i === 0 ? images.length - 1 : i - 1));

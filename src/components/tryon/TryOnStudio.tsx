@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import Image from 'next/image';
+import { useTryOn } from '@/hooks/useTryOn';
 
 interface Product {
   id: string;
@@ -30,29 +31,43 @@ interface TryOnStudioProps {
 }
 
 export function TryOnStudio({ products }: TryOnStudioProps) {
-  const [userImage, setUserImage] = useState<string | null>(null);
+  const [userFile, setUserFile] = useState<File | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [resultImage, setResultImage] = useState<string | null>(null);
+
+  const {
+    status,
+    resultImageUrl,
+    modelPreviewUrl,
+    error,
+    progress,
+    startTryOn,
+    reset: resetTryOn,
+    setModelPreviewUrl
+  } = useTryOn({ 
+    garmentImageUrl: selectedProduct?.imageUrl || '' 
+  });
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setUserImage(url);
-      setResultImage(null);
+      setUserFile(file);
+      resetTryOn();
+      
+      // Create immediate preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setModelPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleTryOn = () => {
-    if (!userImage || !selectedProduct) return;
-    setIsProcessing(true);
-    // Simular processamento da IA
-    setTimeout(() => {
-      setIsProcessing(false);
-      setResultImage(selectedProduct.imageUrl); // Mock: apenas mostra a imagem do produto por enquanto
-    }, 2500);
+    if (!userFile || !selectedProduct) return;
+    startTryOn(userFile);
   };
+
+  const isProcessing = status === 'processing' || status === 'uploading';
 
   return (
     <div className="min-h-screen pt-4 pb-20 px-4 md:px-8" style={{ background: 'var(--ls-bg-cream)' }}>
@@ -78,7 +93,7 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
           <div className="lg:col-span-7 xl:col-span-8">
             <div className="relative aspect-[3/4] md:aspect-auto md:h-[700px] w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-black/5 flex items-center justify-center group">
               
-              {!userImage && !resultImage ? (
+              {!modelPreviewUrl && !resultImageUrl && !selectedProduct ? (
                 <div className="flex flex-col items-center text-center p-12 max-w-sm">
                   {/* Silhouette Placeholder */}
                   <div className="mb-8 relative w-48 h-64 opacity-20 grayscale transition-all group-hover:opacity-30 group-hover:scale-105 duration-700">
@@ -95,11 +110,24 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
               ) : (
                 <div className="relative w-full h-full animate-in fade-in duration-500">
                   <Image 
-                    src={resultImage || userImage || ''} 
+                    src={resultImageUrl || modelPreviewUrl || selectedProduct?.imageUrl || ''} 
                     alt="Preview" 
                     fill 
                     className={`object-cover ${isProcessing ? 'blur-md' : ''} transition-all duration-700`}
+                    priority
                   />
+                  
+                  {/* Overlay for selected product if showing user photo but not result */}
+                  {!resultImageUrl && modelPreviewUrl && selectedProduct && (
+                    <div className="absolute bottom-4 right-4 w-24 h-32 border-2 border-white shadow-xl rounded-sm overflow-hidden z-20 animate-in slide-in-from-bottom-4 duration-500">
+                      <Image 
+                        src={selectedProduct.imageUrl} 
+                        alt="Peça selecionada"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                   
                   {isProcessing && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-sm transition-all duration-500">
@@ -107,11 +135,11 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
                         <div className="w-20 h-20 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                         <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-white animate-pulse" />
                       </div>
-                      <span className="text-white font-bold tracking-widest uppercase text-sm">IA Processando Look...</span>
+                      <span className="text-white font-bold tracking-widest uppercase text-sm">{progress || 'IA Processando Look...'}</span>
                     </div>
                   )}
 
-                  {!isProcessing && resultImage && (
+                  {!isProcessing && resultImageUrl && (
                     <div className="absolute top-6 left-6 animate-in slide-in-from-left duration-500">
                       <div className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full shadow-lg">
                         <CheckCircle2 className="w-4 h-4" />
@@ -120,8 +148,17 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
                     </div>
                   )}
 
+                  {error && (
+                    <div className="absolute top-6 left-6 right-6 animate-in slide-in-from-top duration-500">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-red-600 text-white rounded-2xl shadow-lg">
+                        <X className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-xs font-bold uppercase">{error}</span>
+                      </div>
+                    </div>
+                  )}
+
                   <button 
-                    onClick={() => { setUserImage(null); setResultImage(null); setSelectedProduct(null); }}
+                    onClick={() => { setUserFile(null); setSelectedProduct(null); resetTryOn(); }}
                     className="absolute top-6 right-6 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all shadow-lg"
                   >
                     <X className="w-5 h-5" />
@@ -175,7 +212,7 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
                     className={`relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 ${selectedProduct?.id === product.id ? 'border-[#C4622D] shadow-lg scale-[1.02]' : 'border-transparent hover:border-slate-200'}`}
                     onClick={() => {
                       setSelectedProduct(product);
-                      setResultImage(null);
+                      resetTryOn();
                     }}
                   >
                     <div className="aspect-[3/4] relative overflow-hidden">
@@ -206,18 +243,18 @@ export function TryOnStudio({ products }: TryOnStudioProps) {
             {/* Action CTA */}
             <div className="mt-8 pt-6 border-t border-black/5">
               <button
-                disabled={!userImage || !selectedProduct || isProcessing}
+                disabled={!userFile || !selectedProduct || isProcessing}
                 onClick={handleTryOn}
                 className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em] transition-all shadow-xl
-                  ${!userImage || !selectedProduct || isProcessing
+                  ${!userFile || !selectedProduct || isProcessing
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed grayscale' 
                     : 'bg-black text-white hover:bg-slate-900 active:scale-95 hover:shadow-2xl'
                   }`}
               >
-                <Sparkles className={`w-5 h-5 ${!isProcessing && userImage && selectedProduct ? 'animate-pulse text-yellow-400' : ''}`} />
-                Experimente Agora
+                <Sparkles className={`w-5 h-5 ${!isProcessing && userFile && selectedProduct ? 'animate-pulse text-yellow-400' : ''}`} />
+                {isProcessing ? 'Processando...' : 'Experimente Agora'}
               </button>
-              {!userImage && (
+              {!userFile && (
                 <p className="text-center text-[10px] uppercase font-bold tracking-wider text-[#C4622D] mt-3 animate-bounce">
                   ↑ Primeiro, envie sua foto
                 </p>
