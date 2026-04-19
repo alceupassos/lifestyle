@@ -8,6 +8,7 @@ import './globals.css';
 import { FloatingNavbar } from '@/components/layout/FloatingNavbar';
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import { Toaster } from '@/components/ui/Toaster';
+import { TryOnFAB } from '@/components/tryon/TryOnFAB';
 
 const syne = Syne({
   subsets: ['latin'],
@@ -59,6 +60,7 @@ export default function RootLayout({
         <FloatingNavbar />
         <main className="min-h-screen pt-[72px]">{children}</main>
         <CartDrawer />
+        <TryOnFAB />
         <Toaster />
       </body>
     </html>

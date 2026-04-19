@@ -1,9 +1,20 @@
+// ─────────────────────────────────────────────────────────────
+// LIFE STYLE — TryOnStudio (Life Style 2.0 Style)
+// ─────────────────────────────────────────────────────────────
+
 'use client';
 
-import { useState, useRef } from 'react';
-import { Upload, Camera, Sparkles, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Camera, 
+  Upload, 
+  Sparkles, 
+  CheckCircle2, 
+  X,
+  RefreshCw,
+  Info
+} from 'lucide-react';
 import Image from 'next/image';
-import { clsx } from 'clsx';
 
 interface Product {
   id: string;
@@ -18,209 +29,220 @@ interface TryOnStudioProps {
   products: Product[];
 }
 
-// ── Fallback mock products if Shopify is empty ────────────────
-const MOCK_PRODUCTS: Product[] = [
-  { id: '1', title: 'Organic Cotton Hoodie', handle: 'cotton-hoodie', price: 'R$ 85', imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=300&q=80', category: 'Moletom' },
-  { id: '2', title: 'Bamboo Tee', handle: 'bamboo-tee', price: 'R$ 43', imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&q=80', category: 'Camiseta' },
-  { id: '3', title: 'Recycled Wool Sweater', handle: 'wool-sweater', price: 'R$ 120', imageUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=300&q=80', category: 'Suéter' },
-  { id: '4', title: 'Linen Blazer', handle: 'linen-blazer', price: 'R$ 249', imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300&q=80', category: 'Blazer' },
-  { id: '5', title: 'Slim Jeans', handle: 'slim-jeans', price: 'R$ 189', imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&q=80', category: 'Calça' },
-  { id: '6', title: 'Floral Summer Dress', handle: 'floral-dress', price: 'R$ 159', imageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=300&q=80', category: 'Vestido' },
-];
-
 export function TryOnStudio({ products }: TryOnStudioProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [userImage, setUserImage] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [resultImage, setResultImage] = useState<string | null>(null);
 
-  const displayProducts = products.length > 0 ? products : MOCK_PRODUCTS;
-
-  const handlePhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => setUserPhoto(e.target?.result as string);
-    reader.readAsDataURL(file);
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setUserImage(url);
+      setResultImage(null);
+    }
   };
 
-  const handleTryOn = (product: Product) => {
-    setSelectedProduct(product);
-    if (!userPhoto) return;
+  const handleTryOn = () => {
+    if (!userImage || !selectedProduct) return;
     setIsProcessing(true);
-    // Simulate AI processing
-    setTimeout(() => setIsProcessing(false), 2000);
+    // Simular processamento da IA
+    setTimeout(() => {
+      setIsProcessing(false);
+      setResultImage(selectedProduct.imageUrl); // Mock: apenas mostra a imagem do produto por enquanto
+    }, 2500);
   };
 
   return (
-    <section className="min-h-[calc(100vh-72px)] py-8 px-4" style={{ background: 'var(--ls-bg)' }}>
-      <div className="max-w-6xl mx-auto">
-
-        {/* Page title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ background: 'var(--primary-10)', color: 'var(--primary)' }}>
-            <Sparkles size={12} />
-            Powered by IA
+    <div className="min-h-screen pt-4 pb-20 px-4 md:px-8" style={{ background: 'var(--ls-bg-cream)' }}>
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="ls-heading text-4xl md:text-5xl mb-2">IA STUDIO</h1>
+            <p className="ls-muted max-w-md">
+              Nossa Inteligência Artificial permite que você experimente qualquer peça instantaneamente com sua própria foto.
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2"
-            style={{ fontFamily: 'var(--font-syne)' }}>
-            Life Style
-          </h1>
-          <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-manrope)' }}>
-            Experimente nossas peças virtualmente antes de comprar
-          </p>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full border border-black/5">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600">Servidor IA: Online</span>
+          </div>
         </div>
 
-        {/* Main Two-Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-6">
-
-          {/* ── LEFT PANEL: User Photo ── */}
-          <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: 'var(--shadow-card)' }}>
-
-            {/* Photo area */}
-            <div
-              className="relative flex items-center justify-center bg-[#F5F0EA]"
-              style={{ minHeight: 320 }}>
-              {userPhoto ? (
-                <div className="relative w-full h-80">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={userPhoto}
-                    alt="Sua foto"
-                    className="w-full h-full object-cover"
-                  />
-                  {isProcessing && (
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-3">
-                      <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                      <p className="text-white text-sm font-medium">Processando IA...</p>
-                    </div>
-                  )}
-                  {selectedProduct && !isProcessing && (
-                    <div className="absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selectedProduct.imageUrl} alt={selectedProduct.title} className="w-10 h-10 object-cover rounded-lg" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-[#1A1A1A] truncate">{selectedProduct.title}</p>
-                        <p className="text-xs text-gray-500">{selectedProduct.price}</p>
-                      </div>
-                      <Sparkles size={14} style={{ color: 'var(--primary)' }} />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Silhouette placeholder */
-                <div className="flex flex-col items-center justify-center py-12 px-8">
-                  <div className="relative w-32 h-44 mb-4">
-                    <svg viewBox="0 0 120 160" fill="none" className="w-full h-full">
-                      <ellipse cx="60" cy="28" rx="20" ry="22" fill="#C8BFB4" />
-                      <path d="M20 160 C20 100 30 85 60 82 C90 85 100 100 100 160Z" fill="#C8BFB4" />
-                      <path d="M30 90 L5 140 M90 90 L115 140" stroke="#C8BFB4" strokeWidth="18" strokeLinecap="round" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Main Studio Area (Left/Center) */}
+          <div className="lg:col-span-7 xl:col-span-8">
+            <div className="relative aspect-[3/4] md:aspect-auto md:h-[700px] w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-black/5 flex items-center justify-center group">
+              
+              {!userImage && !resultImage ? (
+                <div className="flex flex-col items-center text-center p-12 max-w-sm">
+                  {/* Silhouette Placeholder */}
+                  <div className="mb-8 relative w-48 h-64 opacity-20 grayscale transition-all group-hover:opacity-30 group-hover:scale-105 duration-700">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-slate-800">
+                      <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z" />
+                      <path d="M18 21v-2a4 4 0 0 0-4-4H10a4 4 0 0 0-4 4v2" />
                     </svg>
                   </div>
-                  <p className="text-xs text-center text-[#9B8F85] leading-relaxed"
-                    style={{ fontFamily: 'var(--font-manrope)' }}>
-                    Experimente nossas peças virtualmente.<br />
-                    Faça o upload de uma foto ou use sua câmera.
+                  <h3 className="ls-heading text-xl mb-4">COMECE AQUI</h3>
+                  <p className="ls-muted text-sm mb-8">
+                    Faça upload de uma foto sua (corpo inteiro ou meio corpo) para ver as peças em você.
                   </p>
+                </div>
+              ) : (
+                <div className="relative w-full h-full animate-in fade-in duration-500">
+                  <Image 
+                    src={resultImage || userImage || ''} 
+                    alt="Preview" 
+                    fill 
+                    className={`object-cover ${isProcessing ? 'blur-md' : ''} transition-all duration-700`}
+                  />
+                  
+                  {isProcessing && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-sm transition-all duration-500">
+                      <div className="relative mb-6">
+                        <div className="w-20 h-20 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-white animate-pulse" />
+                      </div>
+                      <span className="text-white font-bold tracking-widest uppercase text-sm">IA Processando Look...</span>
+                    </div>
+                  )}
+
+                  {!isProcessing && resultImage && (
+                    <div className="absolute top-6 left-6 animate-in slide-in-from-left duration-500">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full shadow-lg">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase">Look Gerado com IA</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => { setUserImage(null); setResultImage(null); setSelectedProduct(null); }}
+                    className="absolute top-6 right-6 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all shadow-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Upload Overlay (Floating at bottom) */}
+              {!isProcessing && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-md px-6">
+                  <div className="bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-xl border border-black/5 flex gap-3">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#2D5016] text-white rounded-2xl cursor-pointer hover:bg-[#1f380f] transition-all font-bold text-xs uppercase tracking-wider text-center">
+                      <Upload className="w-4 h-4" />
+                      Upload sua Foto
+                      <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
+                    </label>
+                    <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#C4622D] text-white rounded-2xl hover:bg-[#a65326] transition-all font-bold text-xs uppercase tracking-wider">
+                      <Camera className="w-4 h-4" />
+                      Use sua Câmera
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Buttons */}
-            <div className="p-4 space-y-3">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest text-white transition-all hover:opacity-90 active:scale-95"
-                style={{ background: '#2D5016', fontFamily: 'var(--font-manrope)' }}>
-                Upload Sua Foto
-              </button>
-
-              <button
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest text-white transition-all hover:opacity-90 active:scale-95"
-                style={{ background: '#C4622D', fontFamily: 'var(--font-manrope)' }}>
-                Use Sua Câmera
-              </button>
-
-              {userPhoto && (
-                <button
-                  onClick={() => { setUserPhoto(null); setSelectedProduct(null); }}
-                  className="w-full py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 transition-all"
-                  style={{ fontFamily: 'var(--font-manrope)' }}>
-                  Remover Foto
-                </button>
-              )}
+            {/* Instruction / Tips */}
+            <div className="mt-6 flex flex-col md:flex-row gap-4 items-center justify-between text-slate-500 px-4">
+              <div className="flex items-center gap-2 text-sm italic">
+                <Info className="w-4 h-4" />
+                Dica: Use fotos com fundo neutro e boa iluminação para melhores resultados.
+              </div>
+              <div className="flex items-center gap-4 text-xs font-bold tracking-widest uppercase">
+                <span className="flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Processamento Instantâneo</span>
+                <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> Life Style AI v2.4</span>
+              </div>
             </div>
-
-            <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }} />
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }} />
           </div>
 
-          {/* ── RIGHT PANEL: Product Grid ── */}
-          <div className="bg-white rounded-2xl" style={{ boxShadow: 'var(--shadow-card)' }}>
-            <div className="sticky top-0 bg-white rounded-t-2xl px-5 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-syne)', fontSize: 16 }}>
-                Selecione uma peça para experimentar
-              </h2>
+          {/* Product Catalog (Right) */}
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full lg:max-h-[700px]">
+            <div className="mb-6 flex items-center justify-between px-2">
+              <h2 className="ls-heading text-2xl uppercase">Catálogo IA</h2>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{products.length} itens</span>
             </div>
 
-            {/* Scrollable grid */}
-            <div className="overflow-y-auto p-4" style={{ maxHeight: 520 }}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {displayProducts.map((product) => (
-                  <div
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {products.map((product) => (
+                  <div 
                     key={product.id}
-                    className={clsx(
-                      'rounded-xl overflow-hidden border-2 transition-all cursor-pointer',
-                      selectedProduct?.id === product.id
-                        ? 'border-[#6B21A8] shadow-md'
-                        : 'border-transparent hover:border-gray-200'
-                    )}>
-                    {/* Product image */}
-                    <div className="relative bg-gray-50" style={{ aspectRatio: '3/4' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={product.imageUrl}
-                        alt={product.title}
-                        className="w-full h-full object-cover"
+                    className={`relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 ${selectedProduct?.id === product.id ? 'border-[#C4622D] shadow-lg scale-[1.02]' : 'border-transparent hover:border-slate-200'}`}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setResultImage(null);
+                    }}
+                  >
+                    <div className="aspect-[3/4] relative overflow-hidden">
+                      <Image 
+                        src={product.imageUrl} 
+                        alt={product.title} 
+                        fill 
+                        className="object-cover transition-transform duration-500 hover:scale-110"
                       />
+                      {selectedProduct?.id === product.id && (
+                        <div className="absolute top-2 right-2 bg-[#C4622D] text-white p-1 rounded-full animate-in zoom-in duration-300">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      )}
                     </div>
-
-                    {/* Product info */}
-                    <div className="p-2.5">
-                      <p className="text-xs font-semibold text-[#1A1A1A] leading-tight mb-0.5 line-clamp-2"
-                        style={{ fontFamily: 'var(--font-manrope)' }}>
-                        {product.title}
-                      </p>
-                      <p className="text-xs font-bold mb-2" style={{ color: 'var(--primary)', fontFamily: 'var(--font-manrope)' }}>
-                        {product.price}
-                      </p>
-
-                      {/* Try-on button */}
-                      <button
-                        onClick={() => handleTryOn(product)}
-                        className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wide text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1"
-                        style={{ background: '#C4622D', fontFamily: 'var(--font-manrope)' }}>
-                        <Sparkles size={10} />
-                        Experimente Agora
-                      </button>
+                    <div className="p-3">
+                      <h4 className="ls-heading text-[10px] md:text-xs uppercase tracking-tight line-clamp-1 mb-1 text-slate-800">{product.title}</h4>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#C4622D]">{product.price}</span>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-slate-400">{product.category}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Action CTA */}
+            <div className="mt-8 pt-6 border-t border-black/5">
+              <button
+                disabled={!userImage || !selectedProduct || isProcessing}
+                onClick={handleTryOn}
+                className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em] transition-all shadow-xl
+                  ${!userImage || !selectedProduct || isProcessing
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed grayscale' 
+                    : 'bg-black text-white hover:bg-slate-900 active:scale-95 hover:shadow-2xl'
+                  }`}
+              >
+                <Sparkles className={`w-5 h-5 ${!isProcessing && userImage && selectedProduct ? 'animate-pulse text-yellow-400' : ''}`} />
+                Experimente Agora
+              </button>
+              {!userImage && (
+                <p className="text-center text-[10px] uppercase font-bold tracking-wider text-[#C4622D] mt-3 animate-bounce">
+                  ↑ Primeiro, envie sua foto
+                </p>
+              )}
+            </div>
           </div>
 
         </div>
-
-        {/* Helper text */}
-        <p className="text-center text-xs text-gray-400 mt-6" style={{ fontFamily: 'var(--font-manrope)' }}>
-          Resultados gerados por IA — podem não ser 100% precisos. Consulte as medidas antes de comprar.
-        </p>
       </div>
-    </section>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(0,0,0,0.2);
+        }
+      `}</style>
+    </div>
   );
 }

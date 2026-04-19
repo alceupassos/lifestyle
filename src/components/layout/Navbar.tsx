@@ -22,7 +22,7 @@ export function Navbar() {
     { href: '/catalogo', label: 'Catálogo' },
     { href: '/catalogo?sort=CREATED_AT_DESC', label: 'Novidades' },
     { href: '/catalogo?sort=PRICE_ASC', label: 'Promoções' },
-    { href: '/tryon', label: 'Experimentar ✦' },
+    { href: '/tryon', label: 'IA STUDIO ✦' },
   ];
 
   return (
