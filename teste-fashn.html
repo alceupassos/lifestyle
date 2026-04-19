@@ -1,0 +1,128 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2869
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="pt-BR">\
+<head>\
+  <meta charset="UTF-8" />\
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\
+  <title>Teste FASHN AI</title>\
+  <style>\
+    body \{ font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; \}\
+    .grid \{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; \}\
+    input, button \{ width: 100%; padding: 12px; margin-top: 8px; \}\
+    img \{ max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin-top: 12px; \}\
+    #status \{ margin-top: 16px; font-weight: bold; \}\
+    .card \{ border: 1px solid #eee; border-radius: 10px; padding: 16px; \}\
+  </style>\
+</head>\
+<body>\
+  <h1>P\'e1gina de teste FASHN AI</h1>\
+\
+  <div class="grid">\
+    <div class="card">\
+      <h3>Imagem da pessoa</h3>\
+      <input id="modelImage" type="text" placeholder="URL da foto da pessoa" />\
+    </div>\
+\
+    <div class="card">\
+      <h3>Imagem da roupa</h3>\
+      <input id="productImage" type="text" placeholder="URL da foto da roupa" />\
+    </div>\
+  </div>\
+\
+  <div class="card" style="margin-top:16px;">\
+    <h3>Configura\'e7\'e3o</h3>\
+    <input id="apiKey" type="password" placeholder="Cole sua FASHN_API_KEY aqui para teste local" />\
+    <input id="prompt" type="text" placeholder='Opcional: ex. "tuck in shirt"' />\
+    <button onclick="runTryOn()">Gerar teste</button>\
+    <div id="status"></div>\
+    <img id="resultImage" style="display:none;" />\
+  </div>\
+\
+  <script>\
+    async function runTryOn() \{\
+      const apiKey = document.getElementById("apiKey").value.trim();\
+      const modelImage = document.getElementById("modelImage").value.trim();\
+      const productImage = document.getElementById("productImage").value.trim();\
+      const prompt = document.getElementById("prompt").value.trim();\
+      const statusEl = document.getElementById("status");\
+      const resultImage = document.getElementById("resultImage");\
+\
+      resultImage.style.display = "none";\
+      resultImage.src = "";\
+\
+      if (!apiKey || !modelImage || !productImage) \{\
+        statusEl.textContent = "Preencha API key, imagem da pessoa e imagem da roupa.";\
+        return;\
+      \}\
+\
+      try \{\
+        statusEl.textContent = "Enviando para o FASHN...";\
+\
+        const runResponse = await fetch("https://api.fashn.ai/v1/run", \{\
+          method: "POST",\
+          headers: \{\
+            "Content-Type": "application/json",\
+            "Authorization": `Bearer $\{apiKey\}`\
+          \},\
+          body: JSON.stringify(\{\
+            model_name: "tryon-max",\
+            inputs: \{\
+              model_image: modelImage,\
+              product_image: productImage,\
+              prompt: prompt || undefined,\
+              resolution: "1k",\
+              num_images: 1\
+            \}\
+          \})\
+        \});\
+\
+        const runData = await runResponse.json();\
+\
+        if (!runResponse.ok) \{\
+          statusEl.textContent = "Erro ao iniciar: " + JSON.stringify(runData);\
+          return;\
+        \}\
+\
+        const predictionId = runData.id;\
+        statusEl.textContent = "Processando... ID: " + predictionId;\
+\
+        let done = false;\
+        while (!done) \{\
+          await new Promise(r => setTimeout(r, 3000));\
+\
+          const statusResponse = await fetch(`https://api.fashn.ai/v1/status/$\{predictionId\}`, \{\
+            headers: \{\
+              "Authorization": `Bearer $\{apiKey\}`\
+            \}\
+          \});\
+\
+          const statusData = await statusResponse.json();\
+\
+          if (statusData.status === "completed") \{\
+            const output = statusData.output;\
+            const imageUrl = Array.isArray(output) ? output[0] : output;\
+\
+            statusEl.textContent = "Conclu\'eddo.";\
+            resultImage.src = imageUrl;\
+            resultImage.style.display = "block";\
+            done = true;\
+          \} else if (["starting", "in_queue", "processing"].includes(statusData.status)) \{\
+            statusEl.textContent = "Status: " + statusData.status;\
+          \} else \{\
+            statusEl.textContent = "Falhou: " + JSON.stringify(statusData);\
+            done = true;\
+          \}\
+        \}\
+      \} catch (err) \{\
+        statusEl.textContent = "Erro geral: " + err.message;\
+      \}\
+    \}\
+  </script>\
+</body>\
+</html>}
